@@ -1,0 +1,5 @@
+*.swp
+dev.sqlite
+secret.txt
+local_settings.py
+*.pyc

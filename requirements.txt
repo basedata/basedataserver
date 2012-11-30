@@ -1,0 +1,2 @@
+-e git+https://github.com/django/django.git@stable/1.4.x#egg=django
+gunicorn>=0.14.3

@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>basedata.org</title>
+    <style>
+        body {
+            font-family: sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <h2>basedata.org</h2>
+    to get an account write a mail to register@basedata.org
+
+    <h3>python</h3>
+    geting started:
+    <pre>
+        easy_install basedata
+    </pre>
+
+    look update data:
+    <pre>
+        from basedata import BaseData
+
+        bd = BaseData()
+        bd.get({'md5': ''})
+    </pre>
+    
+    if you have an account:
+    <pre>
+        from basedata import BaseData
+
+        bd = BaseData()
+        bd.login(username, password)
+        bd.set({'md5': ''}, {'openlibrary': 'OL...'})
+    </pre>
+
+    <h3>curl</h3>
+    look up data:
+    <pre>
+        curl "https://basedata.org/?md5=123"
+    </pre>
+
+    <h3>setup your own server</h3>
+    <pre>
+        git clone https://github.com/basedata/basedataserver
+        cd basedataserver
+        ./manage.py syncdb
+        ./manage.py runserver
+    </pre>
+    and pass the url to your local server to BaseData
+    <pre>
+        from basedata import BaseData
+        bd = BaseData('http://127.0.0.1:8000/')
+        ...
+    </pre>
+</body>
+</html>
+
