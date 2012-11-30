@@ -83,7 +83,7 @@ def update_key(obj, key, value):
 
 def set(query, update, user=None):
     table = getattr(db, is_file(query) and 'files' or 'works')
-    o = get(query)
+    o = get_or_create(query)
     w = None
     o_is_file = is_file(query)
     updated = False

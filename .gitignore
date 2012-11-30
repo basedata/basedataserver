@@ -3,3 +3,10 @@ dev.sqlite
 secret.txt
 local_settings.py
 *.pyc
+bin
+code
+include
+lib
+local
+src
+static/admin
