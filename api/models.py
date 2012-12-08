@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 # vi:si:et:sw=4:sts=4:ts=4
-
 from datetime import datetime
+import base64
 
 from pymongo import Connection, ASCENDING
-
 from django.conf import settings
+
+import utils
+
 
 connection = Connection()
 
@@ -17,6 +19,10 @@ history = db.history
 files.create_index([('sha1', ASCENDING),])
 files.create_index([('md5', ASCENDING),])
 files.create_index([('oshash', ASCENDING),])
+files.create_index([('_work', ASCENDING),])
+
+works.create_index([('isbn', ASCENDING),])
+works.create_index([('openlibrary', ASCENDING),])
 
 
 def is_file_key(key, query=False):
@@ -38,12 +44,13 @@ def get_or_create(obj):
         o = obj
         o['_id'] = table.save(obj)
     return o
-    
+
 def get(obj):
     if is_file(obj):
-        for key in ['sha1', 'md5']:
-            if key in obj:
-                obj[key] = obj[key].upper()
+        if 'md5' in obj:
+            obj['md5'] = utils.normalize_md5(obj['md5'])
+        if 'sha1' in obj:
+            obj['sha1'] = utils.normalize_sha1(obj['sha1'])
         o = files.find_one(obj)
     else:
         o = works.find_one(obj)
@@ -81,7 +88,7 @@ def update_key(obj, key, value):
         else:
             obj[key] = value
 
-def set(query, update, user=None):
+def set(query, update, user=None, description=''):
     table = getattr(db, is_file(query) and 'files' or 'works')
     o = get_or_create(query)
     w = None
@@ -91,19 +98,35 @@ def set(query, update, user=None):
         if key.startswith('_') or key in ('id', 'work', 'files'):
             continue
         value = update[key]
-        if key in ['sha1', 'md5']:
-            value = value.upper()
-            assert len(value) == 32
-        elif key in ['oshash']:
-            value = value.lower()
-            assert len(value) == 16
+        if key == 'md5':
+            value = utils.normalize_md5(value)
+        elif key == 'sha1':
+            value = utils.normalize_sha1(value)
+        elif key == 'oshash':
+            value = utils.normalize_oshash(value)
+        elif key == 'isbn':
+            if isinstance(value, list):
+                value = filter(None, [utils.check_isbn(i) for i in value])
+            else:
+                value = utils.check_isbn(value)
+        elif key == 'openlibrary':
+            value = utils.check_openlibrary(value)
         if o_is_file:
             if not is_file_key(key):
                 if not w:
                     if not '_work' in o:
-                        obj = {}
-                        obj[key] = value
-                        w = get_or_create(obj)
+                        if not isinstance(value, list):
+                           _value = [value]
+                        else:
+                           _value = value
+                        for v in _value:
+                            obj = {}
+                            obj[key] = v
+                            w = get(obj)
+                            if w: break
+                        if not w:
+                            w = get_or_create(obj)
+
                         o['_work'] = w['_id']
                         db.files.save(o)
                     else:
@@ -121,17 +144,20 @@ def set(query, update, user=None):
     if w:
         db.works.save(w)
         if user:
-            log(user, w)
+            log(user, w, description)
     if updated:
         table.save(o)
-        log(user, o)
+        if user:
+            log(user, o, description)
     return o
 
-def log(user, obj):
+def log(user, obj, description=''):
     d = {
         'user': user,
         'date': datetime.now(),
     }
+    if description:
+        d['description'] = description
     if is_file(obj):
         f = files.find_one(obj)
         d['_file'] = f['_id']

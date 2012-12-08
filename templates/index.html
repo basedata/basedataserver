@@ -1,4 +1,5 @@
 <!doctype html>
+{% load humanize %}
 <html>
 <head>
     <meta charset="utf-8" />
@@ -11,8 +12,12 @@
 </head>
 <body>
     <h2>basedata.org</h2>
-    to get an account write a mail to register@basedata.org
-
+    <p>
+        currently indexing {{works|intcomma}} works in {{files|intcomma}} files
+    </p>
+    <p>
+    	to get an account write a mail to register@basedata.org
+    </p>
     <h3>python</h3>
     geting started:
     <pre>
@@ -24,7 +29,7 @@
         from basedata import BaseData
 
         bd = BaseData()
-        bd.get({'md5': ''})
+        bd.get({'md5': '4baef1cf8eac86d225e2401d384269c8'})
     </pre>
     
     if you have an account:
@@ -33,19 +38,21 @@
 
         bd = BaseData()
         bd.login(username, password)
-        bd.set({'md5': ''}, {'openlibrary': 'OL...'})
+        bd.set({'md5': '4baef1cf8eac86d225e2401d384269c8'}, {'openlibrary': 'OL17558009M'})
     </pre>
 
     <h3>curl</h3>
     look up data:
     <pre>
-        curl "https://basedata.org/?md5=123"
+        curl "https://basedata.org/?openlibrary=OL17558009M"
     </pre>
 
     <h3>setup your own server</h3>
     <pre>
         git clone https://github.com/basedata/basedataserver
         cd basedataserver
+        virtualenv --system-site-packages .
+        pip -E . install -r requirements.txt
         ./manage.py syncdb
         ./manage.py runserver
     </pre>

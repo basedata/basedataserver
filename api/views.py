@@ -33,12 +33,10 @@ def get(obj):
         r = {}
     return r
 
-def set(user, query, update):
-    r = models.set(query, update, user)
-    return get(obj)
-
 def log(obj):
     o = models.get(obj)
+    if not o:
+        return {} 
     query = {}
     if models.is_file(obj):
         query = {'_file': o['_id']}
@@ -71,7 +69,11 @@ def api(request):
             for key in keys:
                 data['data'][key] = request.GET[key]
         else:
-            context = RequestContext(request, {'settings': settings})
+            context = RequestContext(request, {
+                'settings': settings,
+                'works': models.works.count(),
+                'files': models.files.count(),
+            })
             return render_to_response('index.html', context)
     else:
         data = json.loads(request.body)
